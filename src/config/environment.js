@@ -7,6 +7,7 @@ const environment = {
   contentful: {
     spaceId: process.env.CONTENTFUL_SPACE_ID || '',
     environmentId: process.env.CONTENTFUL_ENVIRONMENT_ID || 'master',
+    siteKey: process.env.CONTENTFUL_SITE_KEY || '',
     deliveryToken: process.env.CONTENTFUL_DELIVERY_TOKEN || '',
     previewToken: process.env.CONTENTFUL_PREVIEW_TOKEN || '',
     webhookSecret: process.env.CONTENTFUL_WEBHOOK_SECRET || '',

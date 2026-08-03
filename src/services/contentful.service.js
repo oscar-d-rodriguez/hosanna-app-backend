@@ -1,65 +1,9 @@
-const { createClient } = require('contentful');
-const environment = require('../config/environment');
-const logger = require('../config/logger');
+const { createClient: defaultCreateClient } = require('contentful');
+const defaultEnvironment = require('../config/environment');
+const defaultLogger = require('../config/logger');
 
-const PAGE_CONTENT_TYPE = 'page';
-const LEGACY_HOME_PAGE_CONTENT_TYPE = 'homePage';
-
-function resolveLinkList(items, mapper) {
-  if (!Array.isArray(items)) {
-    return [];
-  }
-
-  return items
-    .map((item, index) => mapper(item, index))
-    .filter((item) => Boolean(item));
-}
-
-function getContentTypeId(entry) {
-  return entry?.sys?.contentType?.sys?.id || '';
-}
-
-function parseSettingsJson(value) {
-  if (!value) {
-    return {};
-  }
-
-  if (typeof value === 'object') {
-    return value;
-  }
-
-  if (typeof value !== 'string') {
-    return {};
-  }
-
-  try {
-    return JSON.parse(value);
-  } catch {
-    return {};
-  }
-}
-
-function hasConfig() {
-  const cfg = environment.contentful;
-  return Boolean(cfg.spaceId && cfg.environmentId && cfg.deliveryToken);
-}
-
-function buildClient({ preview }) {
-  const cfg = environment.contentful;
-  const accessToken = preview ? cfg.previewToken : cfg.deliveryToken;
-
-  if (!cfg.spaceId || !cfg.environmentId || !accessToken) {
-    return null;
-  }
-
-  return createClient({
-    space: cfg.spaceId,
-    environment: cfg.environmentId,
-    accessToken,
-    host: preview ? 'preview.contentful.com' : 'cdn.contentful.com',
-    timeout: cfg.requestTimeoutMs,
-  });
-}
+const SITE_CONFIGURATION_CONTENT_TYPE = 'siteConfiguration';
+const SUPPORTED_LOCALES = new Set(['en-US', 'es']);
 
 function mapAssetUrl(asset) {
   const maybeUrl = asset?.fields?.file?.url;
@@ -70,268 +14,132 @@ function mapAssetUrl(asset) {
   return maybeUrl.startsWith('//') ? `https:${maybeUrl}` : maybeUrl;
 }
 
-function mapHeroSlideEntry(entry, index) {
-  const fields = entry?.fields || {};
-  const image = fields.image || fields.asset || fields.heroImage;
+const normalizeOptionalText = (value) => {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed || null;
+};
 
-  return {
-    title: fields.title || `Slide ${index + 1}`,
-    imageUrl: mapAssetUrl(image),
-    imageAlt: fields.imageAlt || fields.description || fields.title || 'Hosanna Church',
-  };
-}
-
-function mapCardEntry(entry) {
-  const fields = entry?.fields || {};
-
-  return {
-    title: fields.title || '',
-    description: fields.description || '',
-  };
-}
-
-function mapMinistryEntry(entry) {
-  const fields = entry?.fields || {};
-
-  return {
-    title: fields.title || '',
-    description: fields.description || '',
-    imageUrl: mapAssetUrl(fields.image),
-    slug: fields.slug || '',
-  };
-}
-
-function mapServiceTimeEntry(entry) {
-  const fields = entry?.fields || {};
-
-  return {
-    day: fields.day || '',
-    time: fields.time || '',
-    type: fields.type || '',
-    location: fields.location || '',
-    note: fields.note || '',
-  };
-}
-
-function mapSectionEntry(entry) {
-  const fields = entry?.fields || {};
-  const contentTypeId = getContentTypeId(entry);
-  const sectionType = fields.type || contentTypeId;
-  const base = {
-    id: entry?.sys?.id || null,
-    title: fields.title || '',
-    type: sectionType,
-    settings: parseSettingsJson(fields.settingsJson),
-  };
-
-  if (contentTypeId === 'heroSection' || sectionType === 'hero') {
-    return {
-      ...base,
-      welcome: fields.welcome || '',
-      subtitle: fields.subtitle || '',
-      buttonLabel: fields.buttonLabel || '',
-      buttonUrl: fields.buttonUrl || '',
-      heroSlides: resolveLinkList(fields.heroSlides, mapHeroSlideEntry),
-    };
+function createContentfulService({
+  createClient = defaultCreateClient,
+  environment = defaultEnvironment,
+  logger = defaultLogger,
+} = {}) {
+  function hasConfig() {
+    const cfg = environment.contentful;
+    return Boolean(cfg.spaceId && cfg.environmentId && cfg.deliveryToken && cfg.siteKey);
   }
 
-  if (contentTypeId === 'aboutSection' || sectionType === 'about') {
-    return {
-      ...base,
-      eyebrow: fields.eyebrow || '',
-      description: fields.description || '',
-      cards: resolveLinkList(fields.cards, mapCardEntry),
-    };
+  function buildClient({ preview }) {
+    const cfg = environment.contentful;
+    const accessToken = preview ? cfg.previewToken : cfg.deliveryToken;
+
+    if (!cfg.spaceId || !cfg.environmentId || !accessToken) {
+      return null;
+    }
+
+    return createClient({
+      space: cfg.spaceId,
+      environment: cfg.environmentId,
+      accessToken,
+      host: preview ? 'preview.contentful.com' : 'cdn.contentful.com',
+      timeout: cfg.requestTimeoutMs,
+    });
   }
 
-  if (contentTypeId === 'ministriesSection' || sectionType === 'ministries') {
+  function normalizeAsset(asset) {
+    const fields = asset?.fields || {};
+    const file = fields.file || {};
+    const details = file.details || {};
+    const imageDetails = details.image || {};
+    const url = mapAssetUrl(asset);
+
+    if (!url) {
+      return null;
+    }
+
     return {
-      ...base,
-      eyebrow: fields.eyebrow || '',
-      description: fields.description || '',
-      ministries: resolveLinkList(fields.ministries, mapMinistryEntry),
-    };
-  }
-
-  if (contentTypeId === 'serviceTimesSection' || sectionType === 'serviceTimes') {
-    return {
-      ...base,
-      eyebrow: fields.eyebrow || '',
-      description: fields.description || '',
-      serviceTimes: resolveLinkList(fields.serviceTimes, mapServiceTimeEntry),
-    };
-  }
-
-  if (contentTypeId === 'livestreamSection' || sectionType === 'livestream') {
-    return {
-      ...base,
-      description: fields.description || '',
-      buttonLabel: fields.buttonLabel || '',
-      buttonUrl: fields.buttonUrl || '',
-    };
-  }
-
-  if (contentTypeId === 'ctaSection' || sectionType === 'cta') {
-    return {
-      ...base,
-      description: fields.description || '',
-      buttonLabel: fields.buttonLabel || '',
-      buttonUrl: fields.buttonUrl || '',
-    };
-  }
-
-  return base;
-}
-
-function mapPageEntry(entry) {
-  const fields = entry?.fields || {};
-  const sections = resolveLinkList(fields.sections, mapSectionEntry);
-
-  const heroSection = sections.find((section) => section.type === 'hero');
-  const aboutSection = sections.find((section) => section.type === 'about');
-  const ministriesSection = sections.find((section) => section.type === 'ministries');
-  const serviceTimesSection = sections.find((section) => section.type === 'serviceTimes');
-  const livestreamSection = sections.find((section) => section.type === 'livestream');
-  const ctaSection = sections.find((section) => section.type === 'cta');
-
-  return {
-    locale: entry?.sys?.locale || 'en-US',
-    updatedAt: entry?.sys?.updatedAt || null,
-    page: {
+      url,
       title: fields.title || '',
-      slug: fields.slug || '/',
-      sections,
-    },
-    sections,
-    hero: heroSection
-      ? {
-          welcome: heroSection.welcome || '',
-          subtitle: heroSection.subtitle || '',
-          ctaLabel: heroSection.buttonLabel || '',
-          slides: heroSection.heroSlides || [],
-        }
-      : {
-          welcome: '',
-          subtitle: '',
-          ctaLabel: '',
-          slides: [],
-        },
-    about: aboutSection
-      ? {
-          eyebrow: aboutSection.eyebrow || '',
-          title: aboutSection.title || '',
-          description: aboutSection.description || '',
-          cards: aboutSection.cards || [],
-        }
-      : {
-          eyebrow: '',
-          title: '',
-          description: '',
-          cards: [],
-        },
-    ministries: ministriesSection?.ministries || [],
-    serviceTimes: serviceTimesSection?.serviceTimes || [],
-    livestream: livestreamSection
-      ? {
-          title: livestreamSection.title || '',
-          description: livestreamSection.description || '',
-          buttonLabel: livestreamSection.buttonLabel || '',
-          buttonUrl: livestreamSection.buttonUrl || '',
-        }
-      : null,
-    cta: ctaSection
-      ? {
-          title: ctaSection.title || '',
-          description: ctaSection.description || '',
-          buttonLabel: ctaSection.buttonLabel || '',
-          buttonUrl: ctaSection.buttonUrl || '',
-        }
-      : null,
-  };
-}
+      description: normalizeOptionalText(fields.description),
+      width: imageDetails.width || null,
+      height: imageDetails.height || null,
+      contentType: file.contentType || '',
+    };
+  }
 
-function mapLegacyHomeEntry(entry) {
-  const fields = entry?.fields || {};
-  const heroSlides = Array.isArray(fields.heroSlides)
-    ? fields.heroSlides
-        .map((slide, index) => ({
-          title: slide?.fields?.title || `Slide ${index + 1}`,
-          imageUrl: mapAssetUrl(slide),
-          imageAlt: slide?.fields?.description || slide?.fields?.title || 'Hosanna Church',
-        }))
-        .filter((slide) => Boolean(slide.imageUrl))
-    : [];
+  function normalizeSeoMetadata(entry) {
+    const fields = entry?.fields || {};
+    const pageTitle = fields.pageTitle || '';
+    const description = fields.description || '';
 
-  const aboutCards = Array.isArray(fields.aboutCards)
-    ? fields.aboutCards.map((card) => ({
-        title: card?.fields?.title || '',
-        description: card?.fields?.description || '',
-      }))
-    : [];
+    return {
+      pageTitle,
+      description,
+      socialTitle: normalizeOptionalText(fields.socialTitle) || pageTitle,
+      socialDescription: normalizeOptionalText(fields.socialDescription) || description,
+      socialImage: normalizeAsset(fields.socialImage),
+      hideFromSearchEngines: Boolean(fields.hideFromSearchEngines),
+    };
+  }
+
+  function normalizeSiteConfiguration(entry) {
+    const fields = entry?.fields || {};
+    const siteConfiguration = {
+      internalName: fields.internalName || '',
+      siteKey: fields.siteKey || '',
+      organizationName: fields.organizationName || '',
+      organizationLogo: normalizeAsset(fields.organizationLogo),
+      defaultSeoMetadata: normalizeSeoMetadata(fields.defaultSeoMetadata),
+    };
+
+    const organizationDescription = normalizeOptionalText(fields.organizationDescription);
+    if (organizationDescription) {
+      siteConfiguration.organizationDescription = organizationDescription;
+    }
+
+    return siteConfiguration;
+  }
+
+  async function getSiteConfiguration({ locale = 'en-US', preview = false } = {}) {
+    if (!SUPPORTED_LOCALES.has(locale)) {
+      return null;
+    }
+
+    if (!hasConfig()) {
+      logger.warn('Contentful is not configured; site configuration is unavailable');
+      return null;
+    }
+
+    const client = buildClient({ preview });
+    if (!client) {
+      return null;
+    }
+
+    const response = await client.getEntries({
+      content_type: SITE_CONFIGURATION_CONTENT_TYPE,
+      'fields.siteKey': environment.contentful.siteKey,
+      locale,
+      include: 2,
+      limit: 1,
+    });
+
+    const entry = response?.items?.[0] || null;
+    return entry ? normalizeSiteConfiguration(entry) : null;
+  }
 
   return {
-    locale: entry?.sys?.locale || 'en-US',
-    updatedAt: entry?.sys?.updatedAt || null,
-    page: {
-      title: fields.internalName || 'Home',
-      slug: '/',
-      sections: [],
-    },
-    sections: [],
-    hero: {
-      welcome: fields.heroWelcome || '',
-      subtitle: fields.heroSubtitle || '',
-      ctaLabel: fields.heroCtaLabel || '',
-      slides: heroSlides,
-    },
-    about: {
-      eyebrow: fields.aboutEyebrow || '',
-      title: fields.aboutTitle || '',
-      description: fields.aboutDescription || '',
-      cards: aboutCards,
-    },
-    ministries: [],
-    serviceTimes: [],
-    livestream: null,
-    cta: null,
+    getSiteConfiguration,
+    mapAsset: mapAssetUrl,
+    normalizeAsset,
+    normalizeSeoMetadata,
+    normalizeSiteConfiguration,
   };
 }
 
-async function fetchFirstEntry(client, contentType, locale, include) {
-  const response = await client.getEntries({
-    content_type: contentType,
-    locale,
-    limit: 1,
-    include,
-  });
-
-  return response?.items?.[0] || null;
-}
-
-async function getHomePage({ locale = 'en-US', preview = false }) {
-  if (!hasConfig()) {
-    logger.warn('Contentful is not configured; serving fallback CMS content');
-    return null;
-  }
-
-  const client = buildClient({ preview });
-  if (!client) {
-    return null;
-  }
-
-  const pageEntry = await fetchFirstEntry(client, PAGE_CONTENT_TYPE, locale, 5);
-  if (pageEntry) {
-    return mapPageEntry(pageEntry);
-  }
-
-  const legacyEntry = await fetchFirstEntry(client, LEGACY_HOME_PAGE_CONTENT_TYPE, locale, 2);
-  if (legacyEntry) {
-    return mapLegacyHomeEntry(legacyEntry);
-  }
-
-  return null;
-}
+const defaultService = createContentfulService();
 
 module.exports = {
-  getHomePage,
+  createContentfulService,
+  ...defaultService,
 };
