@@ -1,0 +1,653 @@
+{
+  "contentTypes": [
+    {
+      "sys": {
+        "id": "page",
+        "type": "ContentType"
+      },
+      "name": "Page",
+      "description": "Ordered page container that owns reusable sections",
+      "displayField": "title",
+      "fields": [
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "slug",
+          "name": "Slug",
+          "type": "Symbol",
+          "required": true,
+          "localized": false
+        },
+        {
+          "id": "sections",
+          "name": "Sections",
+          "type": "Array",
+          "required": true,
+          "localized": false,
+          "items": {
+            "type": "Link",
+            "linkType": "Entry",
+            "validations": [
+              {
+                "linkContentType": [
+                  "heroSection",
+                  "aboutSection",
+                  "ministriesSection",
+                  "serviceTimesSection",
+                  "livestreamSection",
+                  "ctaSection"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "sys": {
+        "id": "heroSection",
+        "type": "ContentType"
+      },
+      "name": "Hero Section",
+      "description": "Homepage hero section",
+      "displayField": "title",
+      "fields": [
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "type",
+          "name": "Type",
+          "type": "Symbol",
+          "required": true,
+          "localized": false,
+          "defaultValue": {
+            "en-US": "hero"
+          }
+        },
+        {
+          "id": "welcome",
+          "name": "Welcome",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "subtitle",
+          "name": "Subtitle",
+          "type": "Text",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "buttonLabel",
+          "name": "Button Label",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "buttonUrl",
+          "name": "Button URL",
+          "type": "Symbol",
+          "required": false,
+          "localized": false
+        },
+        {
+          "id": "heroSlides",
+          "name": "Hero Slides",
+          "type": "Array",
+          "required": true,
+          "localized": false,
+          "items": {
+            "type": "Link",
+            "linkType": "Entry",
+            "validations": [
+              {
+                "linkContentType": [
+                  "heroSlide"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "sys": {
+        "id": "aboutSection",
+        "type": "ContentType"
+      },
+      "name": "About Section",
+      "description": "Homepage about section",
+      "displayField": "title",
+      "fields": [
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "type",
+          "name": "Type",
+          "type": "Symbol",
+          "required": true,
+          "localized": false,
+          "defaultValue": {
+            "en-US": "about"
+          }
+        },
+        {
+          "id": "eyebrow",
+          "name": "Eyebrow",
+          "type": "Symbol",
+          "required": false,
+          "localized": true
+        },
+        {
+          "id": "description",
+          "name": "Description",
+          "type": "Text",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "cards",
+          "name": "Cards",
+          "type": "Array",
+          "required": false,
+          "localized": false,
+          "items": {
+            "type": "Link",
+            "linkType": "Entry",
+            "validations": [
+              {
+                "linkContentType": [
+                  "card"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "sys": {
+        "id": "ministriesSection",
+        "type": "ContentType"
+      },
+      "name": "Ministries Section",
+      "description": "Homepage ministries section",
+      "displayField": "title",
+      "fields": [
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "type",
+          "name": "Type",
+          "type": "Symbol",
+          "required": true,
+          "localized": false,
+          "defaultValue": {
+            "en-US": "ministries"
+          }
+        },
+        {
+          "id": "eyebrow",
+          "name": "Eyebrow",
+          "type": "Symbol",
+          "required": false,
+          "localized": true
+        },
+        {
+          "id": "description",
+          "name": "Description",
+          "type": "Text",
+          "required": false,
+          "localized": true
+        },
+        {
+          "id": "ministries",
+          "name": "Ministries",
+          "type": "Array",
+          "required": false,
+          "localized": false,
+          "items": {
+            "type": "Link",
+            "linkType": "Entry",
+            "validations": [
+              {
+                "linkContentType": [
+                  "ministry"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "sys": {
+        "id": "serviceTimesSection",
+        "type": "ContentType"
+      },
+      "name": "Service Times Section",
+      "description": "Homepage service times section",
+      "displayField": "title",
+      "fields": [
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "type",
+          "name": "Type",
+          "type": "Symbol",
+          "required": true,
+          "localized": false,
+          "defaultValue": {
+            "en-US": "serviceTimes"
+          }
+        },
+        {
+          "id": "eyebrow",
+          "name": "Eyebrow",
+          "type": "Symbol",
+          "required": false,
+          "localized": true
+        },
+        {
+          "id": "description",
+          "name": "Description",
+          "type": "Text",
+          "required": false,
+          "localized": true
+        },
+        {
+          "id": "serviceTimes",
+          "name": "Service Times",
+          "type": "Array",
+          "required": false,
+          "localized": false,
+          "items": {
+            "type": "Link",
+            "linkType": "Entry",
+            "validations": [
+              {
+                "linkContentType": [
+                  "serviceTime"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "sys": {
+        "id": "livestreamSection",
+        "type": "ContentType"
+      },
+      "name": "Livestream Section",
+      "description": "Homepage livestream callout section",
+      "displayField": "title",
+      "fields": [
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "type",
+          "name": "Type",
+          "type": "Symbol",
+          "required": true,
+          "localized": false,
+          "defaultValue": {
+            "en-US": "livestream"
+          }
+        },
+        {
+          "id": "description",
+          "name": "Description",
+          "type": "Text",
+          "required": false,
+          "localized": true
+        },
+        {
+          "id": "buttonLabel",
+          "name": "Button Label",
+          "type": "Symbol",
+          "required": false,
+          "localized": true
+        },
+        {
+          "id": "buttonUrl",
+          "name": "Button URL",
+          "type": "Symbol",
+          "required": false,
+          "localized": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "id": "ctaSection",
+        "type": "ContentType"
+      },
+      "name": "CTA Section",
+      "description": "Homepage call-to-action section",
+      "displayField": "title",
+      "fields": [
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "type",
+          "name": "Type",
+          "type": "Symbol",
+          "required": true,
+          "localized": false,
+          "defaultValue": {
+            "en-US": "cta"
+          }
+        },
+        {
+          "id": "description",
+          "name": "Description",
+          "type": "Text",
+          "required": false,
+          "localized": true
+        },
+        {
+          "id": "buttonLabel",
+          "name": "Button Label",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "buttonUrl",
+          "name": "Button URL",
+          "type": "Symbol",
+          "required": true,
+          "localized": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "id": "heroSlide",
+        "type": "ContentType"
+      },
+      "name": "Hero Slide",
+      "description": "Reusable slide for hero carousels",
+      "displayField": "title",
+      "fields": [
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "image",
+          "name": "Image",
+          "type": "Link",
+          "required": true,
+          "localized": false,
+          "linkType": "Asset"
+        },
+        {
+          "id": "imageAlt",
+          "name": "Image Alt",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "linkUrl",
+          "name": "Link URL",
+          "type": "Symbol",
+          "required": false,
+          "localized": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "id": "card",
+        "type": "ContentType"
+      },
+      "name": "Card",
+      "description": "Reusable card component",
+      "displayField": "title",
+      "fields": [
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "description",
+          "name": "Description",
+          "type": "Text",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "image",
+          "name": "Image",
+          "type": "Link",
+          "required": false,
+          "localized": false,
+          "linkType": "Asset"
+        },
+        {
+          "id": "linkUrl",
+          "name": "Link URL",
+          "type": "Symbol",
+          "required": false,
+          "localized": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "id": "ministry",
+        "type": "ContentType"
+      },
+      "name": "Ministry",
+      "description": "Reusable ministry item",
+      "displayField": "title",
+      "fields": [
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "slug",
+          "name": "Slug",
+          "type": "Symbol",
+          "required": true,
+          "localized": false
+        },
+        {
+          "id": "description",
+          "name": "Description",
+          "type": "Text",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "image",
+          "name": "Image",
+          "type": "Link",
+          "required": false,
+          "localized": false,
+          "linkType": "Asset"
+        },
+        {
+          "id": "buttonLabel",
+          "name": "Button Label",
+          "type": "Symbol",
+          "required": false,
+          "localized": true
+        }
+      ]
+    },
+    {
+      "sys": {
+        "id": "serviceTime",
+        "type": "ContentType"
+      },
+      "name": "Service Time",
+      "description": "Reusable service time entry",
+      "displayField": "day",
+      "fields": [
+        {
+          "id": "day",
+          "name": "Day",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "time",
+          "name": "Time",
+          "type": "Symbol",
+          "required": true,
+          "localized": false
+        },
+        {
+          "id": "type",
+          "name": "Type",
+          "type": "Symbol",
+          "required": false,
+          "localized": true
+        },
+        {
+          "id": "location",
+          "name": "Location",
+          "type": "Symbol",
+          "required": false,
+          "localized": true
+        },
+        {
+          "id": "note",
+          "name": "Note",
+          "type": "Text",
+          "required": false,
+          "localized": true
+        }
+      ]
+    },
+    {
+      "sys": {
+        "id": "navigation",
+        "type": "ContentType"
+      },
+      "name": "Navigation",
+      "description": "Reusable navigation item",
+      "displayField": "label",
+      "fields": [
+        {
+          "id": "label",
+          "name": "Label",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "href",
+          "name": "Href",
+          "type": "Symbol",
+          "required": true,
+          "localized": false
+        },
+        {
+          "id": "kind",
+          "name": "Kind",
+          "type": "Symbol",
+          "required": false,
+          "localized": false
+        }
+      ]
+    },
+    {
+      "sys": {
+        "id": "footer",
+        "type": "ContentType"
+      },
+      "name": "Footer",
+      "description": "Reusable footer content",
+      "displayField": "title",
+      "fields": [
+        {
+          "id": "title",
+          "name": "Title",
+          "type": "Symbol",
+          "required": true,
+          "localized": true
+        },
+        {
+          "id": "tagline",
+          "name": "Tagline",
+          "type": "Text",
+          "required": false,
+          "localized": true
+        },
+        {
+          "id": "links",
+          "name": "Links",
+          "type": "Array",
+          "required": false,
+          "localized": false,
+          "items": {
+            "type": "Link",
+            "linkType": "Entry",
+            "validations": [
+              {
+                "linkContentType": [
+                  "navigation"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "entries": []
+}

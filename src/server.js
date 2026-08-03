@@ -5,6 +5,7 @@ const logger = require('./config/logger');
 const { errorHandler } = require('./middleware/error.middleware');
 const apiLimiter = require('./middleware/rateLimiter.middleware');
 const eventsRouter = require('./api/routes/events.routes');
+const contentRouter = require('./api/routes/content.routes');
 
 const app = express();
 
@@ -51,6 +52,7 @@ app.get('/health', (req, res) => {
 });
 
 app.use('/api/events', eventsRouter);
+app.use('/api/content', contentRouter);
 
 // Error handling (must be registered LAST)
 app.use(errorHandler);
