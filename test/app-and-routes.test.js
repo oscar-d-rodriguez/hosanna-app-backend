@@ -27,8 +27,31 @@ function createTestApp({ contentService, environmentOverrides, eventsRouter } = 
   const environment = buildEnvironment(environmentOverrides);
   const contentRouter = createContentRouter({
     cmsService: contentService || {
+      async getHomePage() {
+        return {
+          source: 'contentful',
+          locale: 'en-US',
+          page: {
+            pageKey: 'home',
+            title: 'Home',
+            slug: '',
+            seoMetadata: {
+              pageTitle: 'Home',
+              description: 'Home page',
+              socialTitle: 'Home',
+              socialDescription: 'Home page',
+              socialImage: null,
+              hideFromSearchEngines: false,
+            },
+            sections: [],
+          },
+        };
+      },
       async getSiteConfiguration() {
         return { source: 'contentful', locale: 'en-US', preview: false, siteConfiguration: {} };
+      },
+      async getMinistry({ slug, locale }) {
+        return { source: 'contentful', locale, ministry: { slug } };
       },
       invalidateCmsCache() {},
     },
@@ -101,7 +124,7 @@ test('unsupported locale returns 400', async () => {
   const app = createTestApp();
 
   await withServer(app, async (server) => {
-    const response = await request(server, { path: '/api/content/site-configuration?locale=fr' });
+    const response = await request(server, { path: '/api/content/pages/home?locale=fr' });
     assert.equal(response.status, 400);
     assert.equal(JSON.parse(response.body).error, 'Unsupported locale');
   });
@@ -111,7 +134,7 @@ test('preview without a valid preview key returns 401', async () => {
   const app = createTestApp();
 
   await withServer(app, async (server) => {
-    const response = await request(server, { path: '/api/content/site-configuration?preview=1' });
+    const response = await request(server, { path: '/api/content/pages/home?preview=1' });
     assert.equal(response.status, 401);
     assert.equal(JSON.parse(response.body).error, 'Invalid preview key');
   });
@@ -128,9 +151,88 @@ test('preview with missing preview configuration returns 503', async () => {
   });
 
   await withServer(app, async (server) => {
-    const response = await request(server, { path: '/api/content/site-configuration?preview=1' });
+    const response = await request(server, { path: '/api/content/pages/home?preview=1' });
     assert.equal(response.status, 503);
     assert.match(JSON.parse(response.body).error, /Preview mode is unavailable/);
+  });
+});
+
+test('home page endpoint returns expected top-level shape', async () => {
+  const app = createTestApp({
+    contentService: {
+      async getHomePage({ locale }) {
+        return {
+          source: 'contentful',
+          locale,
+          page: {
+            pageKey: 'home',
+            title: 'Inicio',
+            slug: '',
+            seoMetadata: {
+              pageTitle: 'Inicio',
+              description: 'Pagina principal',
+              socialTitle: 'Inicio',
+              socialDescription: 'Pagina principal',
+              socialImage: null,
+              hideFromSearchEngines: false,
+            },
+            sections: [],
+          },
+        };
+      },
+      async getSiteConfiguration() {
+        return { source: 'contentful', locale: 'en-US', preview: false, siteConfiguration: {} };
+      },
+      invalidateCmsCache() {},
+    },
+  });
+
+  await withServer(app, async (server) => {
+    const response = await request(server, { path: '/api/content/pages/home?locale=es' });
+    const payload = JSON.parse(response.body);
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.source, 'contentful');
+    assert.equal(payload.locale, 'es');
+    assert.equal(payload.page.pageKey, 'home');
+    assert.ok(Array.isArray(payload.page.sections));
+  });
+});
+
+test('ministry endpoint returns localized ministry data', async () => {
+  const app = createTestApp({
+    contentService: {
+      async getHomePage() {
+        return { source: 'contentful', locale: 'en-US', page: null };
+      },
+      async getSiteConfiguration() {
+        return { source: 'contentful', locale: 'en-US', preview: false, siteConfiguration: {} };
+      },
+      async getMinistry({ slug, locale }) {
+        return { source: 'contentful', locale, ministry: { slug, title: 'Worship' } };
+      },
+      invalidateCmsCache() {},
+    },
+  });
+
+  await withServer(app, async (server) => {
+    const response = await request(server, { path: '/api/content/ministries/worship?locale=es' });
+    const payload = JSON.parse(response.body);
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.source, 'contentful');
+    assert.equal(payload.locale, 'es');
+    assert.equal(payload.ministry.slug, 'worship');
+  });
+});
+
+test('ministry endpoint rejects unsupported locales', async () => {
+  const app = createTestApp();
+
+  await withServer(app, async (server) => {
+    const response = await request(server, { path: '/api/content/ministries/worship?locale=fr' });
+    assert.equal(response.status, 400);
+    assert.equal(JSON.parse(response.body).error, 'Unsupported locale');
   });
 });
 

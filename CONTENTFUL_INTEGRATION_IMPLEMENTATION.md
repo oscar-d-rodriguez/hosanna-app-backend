@@ -1,11 +1,16 @@
 # Hosanna Contentful CMS Integration Blueprint
 
 ## Scope
-This document covers only the current first Contentful slice in the backend:
+This document covers the current Contentful integration in the backend:
 
 - `seoMetadata`
 - `siteConfiguration`
+- `Page` content and homepage sections
+- ministry detail content
+- navigation and footer configuration
 - `GET /api/content/site-configuration`
+- `GET /api/content/pages/home`
+- `GET /api/content/ministries/:slug`
 - Delivery API and Preview API behavior
 - locale support for `en-US` and `es`
 - caching
@@ -35,6 +40,26 @@ Fields:
 - `organizationLogo`
 - `organizationDescription`
 - `defaultSeoMetadata`
+- `navigationItems`
+- `offeringUrl`
+- footer text, links, social links, and contact information
+
+### Homepage sections
+
+The `Page` content type references ordered homepage sections. The backend currently normalizes:
+
+- `heroSection`
+- `aboutSection` and `aboutCard`
+- `ministriesSection` and `ministry`
+- `youthSection` and `youthActivity`
+- `contactSection` and `contactServiceTime`
+- `offeringSection` and `offeringPoint`
+- `serviceTimesSection` and `serviceScheduleItem`
+
+### Navigation and footer
+
+- `siteLink`
+- `siteSocialLink`
 
 ## API Contract
 
@@ -120,19 +145,13 @@ Required backend values for this slice:
 - `CMS_PREVIEW_KEY`
 - `CONTENTFUL_REQUEST_TIMEOUT_MS`
 - `CMS_CACHE_TTL_SECONDS`
-- `WEBSITE_REVALIDATE_URL` optional
 
 ## Webhook Invalidations
 
-The backend webhook handler clears the CMS cache namespace and can optionally notify a website revalidation endpoint when configured.
+The backend webhook handler clears the CMS cache namespace.
 
-## Future Work
+## Remaining Work
 
-These are future tasks only and are not implemented in this slice:
-
-- `Page`
-- `Home`
-- `navigation`
-- reusable section content types
-
-Do not claim website or Flutter changes are implemented unless those repositories actually contain those changes.
+- Events continue to use the existing backend events API rather than Contentful.
+- Contact and newsletter form delivery remain application behavior rather than CMS content.
+- Configure the Contentful webhook to call the backend cache-invalidation endpoint after publishing content.
