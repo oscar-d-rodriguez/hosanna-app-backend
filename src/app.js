@@ -8,6 +8,7 @@ function createApp({
   environment = defaultEnvironment,
   eventsRouter,
   contentRouter,
+  updatesRouter,
   allowedOrigins,
 } = {}) {
   const app = express();
@@ -56,6 +57,7 @@ function createApp({
 
   app.use('/api/events', eventsRouter);
   app.use('/api/content', contentRouter);
+  app.use('/api/updates', updatesRouter || require('./api/routes/updates.routes').createUpdatesRouter());
 
   app.use(errorHandler);
 
